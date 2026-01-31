@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents the pg-boss schema version selected by the user
-enum PgBossVersion: String, Comparable, Hashable, Codable, CaseIterable {
+enum PgBossVersion: String, Comparable, Hashable, Codable, CaseIterable, Sendable {
     case legacy      // v7/v8 - camelCase columns, limited features
     case v9          // v9 - camelCase columns, no schedule table, has archive
     case v10         // v10 - snake_case columns, schedule support, has archive

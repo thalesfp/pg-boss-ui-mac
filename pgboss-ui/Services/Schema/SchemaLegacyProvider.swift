@@ -17,6 +17,8 @@ struct SchemaLegacyProvider: SchemaProvider {
     // Legacy versions don't have schedule table
     let scheduleColumns: ScheduleColumnMapping? = nil
 
+    nonisolated init() {}
+
     func fetchSchedulesSQL() -> String? {
         nil
     }

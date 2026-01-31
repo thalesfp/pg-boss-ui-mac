@@ -20,15 +20,15 @@ struct DatabaseService {
     /// Thread-safe cancellation state shared between Task and GCD queue
     private final class CancellationState: @unchecked Sendable {
         private let lock = NSLock()
-        private var _isCancelled = false
+        private nonisolated(unsafe) var _isCancelled = false
 
-        var isCancelled: Bool {
+        nonisolated var isCancelled: Bool {
             lock.lock()
             defer { lock.unlock() }
             return _isCancelled
         }
 
-        func cancel() {
+        nonisolated func cancel() {
             lock.lock()
             _isCancelled = true
             lock.unlock()

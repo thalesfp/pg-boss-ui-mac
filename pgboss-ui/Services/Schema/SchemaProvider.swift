@@ -8,7 +8,7 @@
 import Foundation
 
 /// Column name mappings for job table fields across pg-boss versions
-struct JobColumnMapping {
+struct JobColumnMapping: Sendable {
     let id: String
     let name: String
     let state: String
@@ -74,7 +74,7 @@ struct JobColumnMapping {
 }
 
 /// Column name mappings for schedule table fields
-struct ScheduleColumnMapping {
+struct ScheduleColumnMapping: Sendable {
     let name: String
     let cron: String
     let timezone: String
@@ -96,7 +96,7 @@ struct ScheduleColumnMapping {
 }
 
 /// Protocol defining SQL queries and column mappings for a pg-boss schema version
-protocol SchemaProvider {
+protocol SchemaProvider: Sendable {
     /// The pg-boss version this provider supports
     var version: PgBossVersion { get }
 

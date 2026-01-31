@@ -18,6 +18,8 @@ struct SchemaV9Provider: SchemaProvider {
     // v9 doesn't have schedule table
     let scheduleColumns: ScheduleColumnMapping? = nil
 
+    nonisolated init() {}
+
     func fetchSchedulesSQL() -> String? {
         nil
     }

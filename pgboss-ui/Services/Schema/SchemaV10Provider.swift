@@ -17,6 +17,8 @@ struct SchemaV10Provider: SchemaProvider {
 
     let scheduleColumns: ScheduleColumnMapping? = .snakeCase
 
+    nonisolated init() {}
+
     func fetchSchedulesSQL() -> String? {
         let cols = scheduleColumns!
         return """
