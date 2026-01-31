@@ -1,0 +1,25 @@
+# Xcode user data
+xcuserdata/
+*.xcuserdatad
+
+# Build artifacts
+DerivedData/
+build/
+
+# macOS system files
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Xcode workspace settings
+xcshareddata/IDEWorkspaceChecks.plist
+
+# Repo-local docs and assistant guidance
+AGENTS.md
+CLAUDE.md
+docs/
+
+# Distribution artifacts
+dist/
