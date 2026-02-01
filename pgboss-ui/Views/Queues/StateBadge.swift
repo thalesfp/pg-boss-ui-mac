@@ -20,8 +20,8 @@ struct BadgeStyle: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .padding(.horizontal, size == .regular ? DesignTokens.Spacing.medium : DesignTokens.Spacing.small)
-            .padding(.vertical, size == .regular ? DesignTokens.Spacing.xSmall : DesignTokens.Spacing.xxSmall)
+            .padding(.horizontal, size == .regular ? DesignTokens.Spacing.medium : DesignTokens.Spacing.small - 1)
+            .padding(.vertical, size == .regular ? DesignTokens.Spacing.xSmall : DesignTokens.Spacing.xxSmall + 1)
             .background(color.opacity(DesignTokens.Opacity.backgroundTint))
             .foregroundStyle(color)
             .clipShape(Capsule())
@@ -74,8 +74,9 @@ struct CountBadge: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xSmall) {
             Text("\(count)")
-                .font(.caption)
+                .font(.system(size: 11))
                 .fontWeight(.semibold)
+                .monospacedDigit()
             if !label.isEmpty {
                 Text(label)
                     .font(.caption2)

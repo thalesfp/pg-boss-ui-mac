@@ -83,4 +83,38 @@ enum DesignTokens {
             return formatter
         }()
     }
+
+    // MARK: - Sidebar Specific
+    enum Sidebar {
+        static let rowVerticalPadding: CGFloat = 8
+        static let rowHorizontalPadding: CGFloat = 4
+        static let badgeRowSpacing: CGFloat = 6
+        static let selectionIndicatorWidth: CGFloat = 3
+        static let selectionIndicatorCornerRadius: CGFloat = 1.5
+        static let badgeSpacing: CGFloat = 4
+        static let badgeVerticalSpacing: CGFloat = 4
+        static let queueNameSize: CGFloat = 14
+        static let totalCountSize: CGFloat = 13
+        static let scheduleNameSize: CGFloat = 14
+        static let scheduleMetaSize: CGFloat = 11
+    }
+
+    // MARK: - Selection Colors
+    enum Selection {
+        static func background(isSelected: Bool) -> Color {
+            isSelected ? Color.accentColor.opacity(0.12) : Color.clear
+        }
+
+        static func indicatorColor(isSelected: Bool) -> Color {
+            isSelected ? Color.accentColor : Color.clear
+        }
+    }
+
+    // MARK: - Typography
+    enum Typography {
+        static let queueNameWeight: Font.Weight = .semibold
+        static let scheduleNameWeight: Font.Weight = .medium
+        static let totalCountWeight: Font.Weight = .regular
+        static let metaTextWeight: Font.Weight = .regular
+    }
 }

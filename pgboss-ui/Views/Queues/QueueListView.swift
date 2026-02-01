@@ -19,8 +19,14 @@ struct QueueListView: View {
     var body: some View {
         Group {
             if isLoading && queues.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: DesignTokens.Spacing.medium) {
+                    ProgressView()
+                        .controlSize(.regular)
+                    Text("Loading queues...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(selection: $selectedQueueId) {
                     Section(isExpanded: $isQueuesExpanded) {
@@ -32,13 +38,17 @@ struct QueueListView: View {
                             }
                         } else {
                             ForEach(queues) { queue in
-                                QueueRowView(queue: queue)
+                                QueueRowView(queue: queue, isSelected: selectedQueueId == queue.id)
                                     .tag(queue.id)
                             }
                         }
                     } header: {
                         Text("Queues")
-                            .font(.headline)
+                            .font(.system(size: 11))
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
                     }
 
                     Section(isExpanded: $isSchedulesExpanded) {
@@ -55,7 +65,11 @@ struct QueueListView: View {
                         }
                     } header: {
                         Text("Schedules")
-                            .font(.headline)
+                            .font(.system(size: 11))
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
                     }
                 }
                 .listStyle(.sidebar)

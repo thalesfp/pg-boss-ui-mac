@@ -9,45 +9,65 @@ import SwiftUI
 
 struct QueueRowView: View {
     let queue: Queue
+    var isSelected: Bool = false
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
-            HStack {
-                Text(queue.name)
-                    .font(.headline)
-                    .lineLimit(1)
+    private var activeBadges: [(JobState, Int)] {
+        [
+            (.created, queue.stats.created),
+            (.retry, queue.stats.retry),
+            (.active, queue.stats.active),
+            (.completed, queue.stats.completed),
+            (.failed, queue.stats.failed),
+            (.cancelled, queue.stats.cancelled)
+        ].filter { $0.1 > 0 }
+    }
 
-                Spacer()
+    private var selectionIndicator: some View {
+        Rectangle()
+            .fill(DesignTokens.Selection.indicatorColor(isSelected: isSelected))
+            .frame(width: DesignTokens.Sidebar.selectionIndicatorWidth)
+            .cornerRadius(DesignTokens.Sidebar.selectionIndicatorCornerRadius)
+    }
 
-                Text("\(queue.stats.total)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            HStack(spacing: DesignTokens.Spacing.xSmall) {
-                if queue.stats.created > 0 {
-                    CountBadge(count: queue.stats.created, color: JobState.created.color, label: "")
-                }
-                if queue.stats.retry > 0 {
-                    CountBadge(count: queue.stats.retry, color: JobState.retry.color, label: "")
-                }
-                if queue.stats.active > 0 {
-                    CountBadge(count: queue.stats.active, color: JobState.active.color, label: "")
-                }
-                if queue.stats.completed > 0 {
-                    CountBadge(count: queue.stats.completed, color: JobState.completed.color, label: "")
-                }
-                if queue.stats.failed > 0 {
-                    CountBadge(count: queue.stats.failed, color: JobState.failed.color, label: "")
-                }
-                if queue.stats.cancelled > 0 {
-                    CountBadge(count: queue.stats.cancelled, color: JobState.cancelled.color, label: "")
-                }
-
-                Spacer()
+    private var badgeSection: some View {
+        FlowLayout(spacing: DesignTokens.Sidebar.badgeSpacing) {
+            ForEach(activeBadges, id: \.0) { state, count in
+                CountBadge(count: count, color: state.color, label: "")
             }
         }
-        .padding(.vertical, DesignTokens.Spacing.xSmall)
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            selectionIndicator
+
+            VStack(alignment: .leading, spacing: DesignTokens.Sidebar.badgeRowSpacing) {
+                // Queue name + total
+                HStack(spacing: DesignTokens.Spacing.small) {
+                    Text(queue.name)
+                        .font(.system(size: DesignTokens.Sidebar.queueNameSize))
+                        .fontWeight(DesignTokens.Typography.queueNameWeight)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text("\(queue.stats.total)")
+                        .font(.system(size: DesignTokens.Sidebar.totalCountSize))
+                        .fontWeight(DesignTokens.Typography.totalCountWeight)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+
+                // Badges with flow layout
+                if !activeBadges.isEmpty {
+                    badgeSection
+                }
+            }
+            .padding(.horizontal, DesignTokens.Sidebar.rowHorizontalPadding)
+            .padding(.vertical, DesignTokens.Sidebar.rowVerticalPadding)
+        }
+        .background(DesignTokens.Selection.background(isSelected: isSelected))
         .contentShape(Rectangle())
     }
 }

@@ -9,32 +9,42 @@ import SwiftUI
 
 struct ScheduleRowView: View {
     let schedule: Schedule
+    var isSelected: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
             Text(schedule.name)
-                .font(.headline)
+                .font(.system(size: DesignTokens.Sidebar.scheduleNameSize))
+                .fontWeight(DesignTokens.Typography.scheduleNameWeight)
+                .foregroundStyle(.primary)
                 .lineLimit(1)
 
             HStack(spacing: DesignTokens.Spacing.xSmall) {
                 Image(systemName: "clock")
-                    .font(.caption)
+                    .font(.system(size: DesignTokens.Sidebar.scheduleMetaSize))
                     .foregroundStyle(.secondary)
 
                 Text(schedule.cron)
-                    .font(.caption)
+                    .font(.system(size: DesignTokens.Sidebar.scheduleMetaSize))
+                    .fontWeight(DesignTokens.Typography.metaTextWeight)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
                 if let timezone = schedule.timezone {
-                    Text("(\(timezone))")
-                        .font(.caption)
+                    Text("·")
+                        .foregroundStyle(.quaternary)
+
+                    Text(timezone)
+                        .font(.system(size: DesignTokens.Sidebar.scheduleMetaSize))
+                        .fontWeight(DesignTokens.Typography.metaTextWeight)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
             }
         }
-        .padding(.vertical, DesignTokens.Spacing.xSmall)
+        .padding(.horizontal, DesignTokens.Sidebar.rowHorizontalPadding)
+        .padding(.vertical, DesignTokens.Sidebar.rowVerticalPadding)
+        .background(DesignTokens.Selection.background(isSelected: isSelected))
         .contentShape(Rectangle())
     }
 }
