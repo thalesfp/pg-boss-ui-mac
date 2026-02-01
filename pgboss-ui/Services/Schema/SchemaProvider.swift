@@ -71,6 +71,28 @@ struct JobColumnMapping: Sendable {
         retryDelay: "retry_delay",
         retryBackoff: "retry_backoff"
     )
+
+    /// v11+: snake_case columns with expire_seconds instead of expire_in
+    static let v11Plus = JobColumnMapping(
+        id: "id",
+        name: "name",
+        state: "state",
+        priority: "priority",
+        data: "data",
+        createdOn: "created_on",
+        startedOn: "started_on",
+        completedOn: "completed_on",
+        retryCount: "retry_count",
+        retryLimit: "retry_limit",
+        output: "output",
+        singletonKey: "singleton_key",
+        singletonOn: "singleton_on",
+        expireIn: "expire_seconds",  // Changed in v11
+        keepUntil: "keep_until",
+        startAfter: "start_after",
+        retryDelay: "retry_delay",
+        retryBackoff: "retry_backoff"
+    )
 }
 
 /// Column name mappings for schedule table fields
