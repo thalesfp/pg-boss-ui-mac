@@ -51,11 +51,11 @@ struct QueueService {
                             let config: QueueConfig
                             if isV11 {
                                 // v11: retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
-                                let retentionSeconds = try columns[1].int()
+                                let retentionSeconds = try columns[1].optionalInt() ?? 900  // Default: 15 minutes
                                 let deletionSeconds = try columns[2].optionalInt()
-                                let expireSeconds = try columns[3].int()
-                                let retryLimit = try columns[4].int()
-                                let policy = try columns[5].string()
+                                let expireSeconds = try columns[3].optionalInt() ?? 900  // Default: 15 minutes
+                                let retryLimit = try columns[4].optionalInt() ?? 0  // Default: no retries
+                                let policy = try columns[5].optionalString() ?? "standard"  // Default: standard
                                 config = QueueConfig(
                                     retentionSeconds: retentionSeconds,
                                     deletionSeconds: deletionSeconds,
@@ -65,10 +65,10 @@ struct QueueService {
                                 )
                             } else {
                                 // v10: retention_minutes, expire_seconds, retry_limit, policy
-                                let retentionMinutes = try columns[1].int()
-                                let expireSeconds = try columns[2].int()
-                                let retryLimit = try columns[3].int()
-                                let policy = try columns[4].string()
+                                let retentionMinutes = try columns[1].optionalInt() ?? 15  // Default: 15 minutes
+                                let expireSeconds = try columns[2].optionalInt() ?? 900  // Default: 15 minutes (900s)
+                                let retryLimit = try columns[3].optionalInt() ?? 0  // Default: no retries
+                                let policy = try columns[4].optionalString() ?? "standard"  // Default: standard policy
                                 config = QueueConfig(
                                     retentionSeconds: retentionMinutes * 60,  // Convert to seconds
                                     deletionSeconds: nil,
