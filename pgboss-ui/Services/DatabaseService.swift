@@ -53,7 +53,17 @@ struct DatabaseService {
                         configuration.port = connection.port
                         configuration.database = connection.database
                         configuration.user = connection.username
-                        configuration.credential = .md5Password(password: connection.password)
+
+                        // Set credential based on auth method
+                        switch connection.authMethod {
+                        case .scramSHA256:
+                            configuration.credential = .scramSHA256(password: connection.password)
+                        case .md5:
+                            configuration.credential = .md5Password(password: connection.password)
+                        case .auto:
+                            configuration.credential = .scramSHA256(password: connection.password)
+                        }
+
                         configuration.socketTimeout = connectionTimeoutSeconds
 
                         // Configure SSL based on connection settings
@@ -71,7 +81,24 @@ struct DatabaseService {
                             )
                         }
 
-                        let conn = try PostgresClientKit.Connection(configuration: configuration)
+                        let conn: PostgresClientKit.Connection
+
+                        // For auto mode, catch auth errors and retry with MD5
+                        if connection.authMethod == .auto {
+                            do {
+                                conn = try PostgresClientKit.Connection(configuration: configuration)
+                            } catch let error as PostgresError {
+                                if case .md5PasswordCredentialRequired = error {
+                                    configuration.credential = .md5Password(password: connection.password)
+                                    conn = try PostgresClientKit.Connection(configuration: configuration)
+                                } else {
+                                    throw error
+                                }
+                            }
+                        } else {
+                            conn = try PostgresClientKit.Connection(configuration: configuration)
+                        }
+
                         defer { conn.close() }
 
                         // Check for cancellation after connection established

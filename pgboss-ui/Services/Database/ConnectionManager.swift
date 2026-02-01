@@ -31,7 +31,18 @@ actor ConnectionManager {
         configuration.port = connection.port
         configuration.database = connection.database
         configuration.user = connection.username
-        configuration.credential = .md5Password(password: connection.password)
+
+        // Set credential based on auth method
+        switch connection.authMethod {
+        case .scramSHA256:
+            configuration.credential = .scramSHA256(password: connection.password)
+        case .md5:
+            configuration.credential = .md5Password(password: connection.password)
+        case .auto:
+            // Try SCRAM first
+            configuration.credential = .scramSHA256(password: connection.password)
+        }
+
         configuration.socketTimeout = connectionTimeoutSeconds
 
         switch connection.sslMode {
@@ -48,7 +59,21 @@ actor ConnectionManager {
             )
         }
 
-        return try PostgresClientKit.Connection(configuration: configuration)
+        // For auto mode, catch auth errors and retry with MD5
+        if connection.authMethod == .auto {
+            do {
+                return try PostgresClientKit.Connection(configuration: configuration)
+            } catch let error as PostgresError {
+                // If SCRAM failed with MD5 required error, retry with MD5
+                if case .md5PasswordCredentialRequired = error {
+                    configuration.credential = .md5Password(password: connection.password)
+                    return try PostgresClientKit.Connection(configuration: configuration)
+                }
+                throw error
+            }
+        } else {
+            return try PostgresClientKit.Connection(configuration: configuration)
+        }
     }
 
     // MARK: - Schema Provider
@@ -113,7 +138,17 @@ extension ConnectionManager {
         configuration.port = connection.port
         configuration.database = connection.database
         configuration.user = connection.username
-        configuration.credential = .md5Password(password: connection.password)
+
+        // Set credential based on auth method
+        switch connection.authMethod {
+        case .scramSHA256:
+            configuration.credential = .scramSHA256(password: connection.password)
+        case .md5:
+            configuration.credential = .md5Password(password: connection.password)
+        case .auto:
+            configuration.credential = .scramSHA256(password: connection.password)
+        }
+
         configuration.socketTimeout = timeout
 
         switch connection.sslMode {
@@ -130,6 +165,19 @@ extension ConnectionManager {
             )
         }
 
-        return try PostgresClientKit.Connection(configuration: configuration)
+        // For auto mode, catch auth errors and retry with MD5
+        if connection.authMethod == .auto {
+            do {
+                return try PostgresClientKit.Connection(configuration: configuration)
+            } catch let error as PostgresError {
+                if case .md5PasswordCredentialRequired = error {
+                    configuration.credential = .md5Password(password: connection.password)
+                    return try PostgresClientKit.Connection(configuration: configuration)
+                }
+                throw error
+            }
+        } else {
+            return try PostgresClientKit.Connection(configuration: configuration)
+        }
     }
 }

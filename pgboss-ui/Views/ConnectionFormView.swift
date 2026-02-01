@@ -19,6 +19,7 @@ private struct ConnectionFormData {
     var username: String = ""
     var password: String = ""
     var sslMode: Connection.SSLMode = .enabled
+    var authMethod: Connection.AuthMethod = .auto
     var caCertificatePath: String = ""
     var clientCertificatePath: String = ""
     var clientKeyPath: String = ""
@@ -38,6 +39,7 @@ private struct ConnectionFormData {
         username = connection.username
         password = connection.password
         sslMode = connection.sslMode
+        authMethod = connection.authMethod
         caCertificatePath = connection.caCertificatePath
         clientCertificatePath = connection.clientCertificatePath
         clientKeyPath = connection.clientKeyPath
@@ -54,6 +56,7 @@ private struct ConnectionFormData {
             username: username,
             password: password,
             sslMode: sslMode,
+            authMethod: authMethod,
             caCertificatePath: caCertificatePath,
             clientCertificatePath: clientCertificatePath,
             clientKeyPath: clientKeyPath,
@@ -107,6 +110,12 @@ struct ConnectionFormView: View {
                 Section("Authentication") {
                     TextField("Username", text: $formData.username)
                     SecureField("Password", text: $formData.password)
+                    Picker("Method", selection: $formData.authMethod) {
+                        ForEach(Connection.AuthMethod.allCases, id: \.self) { method in
+                            Text(method.rawValue).tag(method)
+                        }
+                    }
+                    .help("Auto tries SCRAM-SHA-256 first, falls back to MD5 for legacy servers")
                 }
 
                 Section("SSL / TLS") {

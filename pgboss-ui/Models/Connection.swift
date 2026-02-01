@@ -14,6 +14,16 @@ struct Connection: Identifiable, Hashable, Codable {
         case verifyCA = "Verify CA"
     }
 
+    enum AuthMethod: String, Codable, CaseIterable, Hashable, Sendable {
+        case auto = "Auto"
+        case scramSHA256 = "SCRAM-SHA-256"
+        case md5 = "MD5"
+
+        var displayName: String {
+            return rawValue
+        }
+    }
+
     let id: UUID
     var name: String
     var host: String
@@ -22,12 +32,13 @@ struct Connection: Identifiable, Hashable, Codable {
     var username: String
     var password: String
     var sslMode: SSLMode
+    var authMethod: AuthMethod
     var caCertificatePath: String
     var clientCertificatePath: String
     var clientKeyPath: String
     var pgBossVersion: PgBossVersion
 
-    init(id: UUID = UUID(), name: String, host: String, port: Int = 5432, database: String, username: String, password: String = "", sslMode: SSLMode = .enabled, caCertificatePath: String = "", clientCertificatePath: String = "", clientKeyPath: String = "", pgBossVersion: PgBossVersion = .v11Plus) {
+    init(id: UUID = UUID(), name: String, host: String, port: Int = 5432, database: String, username: String, password: String = "", sslMode: SSLMode = .enabled, authMethod: AuthMethod = .auto, caCertificatePath: String = "", clientCertificatePath: String = "", clientKeyPath: String = "", pgBossVersion: PgBossVersion = .v11Plus) {
         self.id = id
         self.name = name
         self.host = host
@@ -36,6 +47,7 @@ struct Connection: Identifiable, Hashable, Codable {
         self.username = username
         self.password = password
         self.sslMode = sslMode
+        self.authMethod = authMethod
         self.caCertificatePath = caCertificatePath
         self.clientCertificatePath = clientCertificatePath
         self.clientKeyPath = clientKeyPath
@@ -45,7 +57,7 @@ struct Connection: Identifiable, Hashable, Codable {
     // Custom Codable implementation to exclude password from encoding
     enum CodingKeys: String, CodingKey {
         case id, name, host, port, database, username
-        case sslMode, caCertificatePath, clientCertificatePath, clientKeyPath
+        case sslMode, authMethod, caCertificatePath, clientCertificatePath, clientKeyPath
         case pgBossVersion
     }
 
@@ -59,6 +71,7 @@ struct Connection: Identifiable, Hashable, Codable {
         username = try container.decode(String.self, forKey: .username)
         password = "" // Password loaded separately from Keychain
         sslMode = try container.decodeIfPresent(SSLMode.self, forKey: .sslMode) ?? .enabled
+        authMethod = try container.decodeIfPresent(AuthMethod.self, forKey: .authMethod) ?? .auto
         caCertificatePath = try container.decodeIfPresent(String.self, forKey: .caCertificatePath) ?? ""
         clientCertificatePath = try container.decodeIfPresent(String.self, forKey: .clientCertificatePath) ?? ""
         clientKeyPath = try container.decodeIfPresent(String.self, forKey: .clientKeyPath) ?? ""
@@ -75,6 +88,7 @@ struct Connection: Identifiable, Hashable, Codable {
         try container.encode(username, forKey: .username)
         // Password intentionally not encoded - stored in Keychain
         try container.encode(sslMode, forKey: .sslMode)
+        try container.encode(authMethod, forKey: .authMethod)
         try container.encode(caCertificatePath, forKey: .caCertificatePath)
         try container.encode(clientCertificatePath, forKey: .clientCertificatePath)
         try container.encode(clientKeyPath, forKey: .clientKeyPath)
