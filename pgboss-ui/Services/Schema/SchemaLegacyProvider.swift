@@ -11,13 +11,16 @@ import Foundation
 /// Uses camelCase columns, may have fewer features
 struct SchemaLegacyProvider: SchemaProvider {
     let version: PgBossVersion = .legacy
+    let schema: String
 
     let jobColumns: JobColumnMapping = .camelCase
 
     // Legacy versions don't have schedule table
     let scheduleColumns: ScheduleColumnMapping? = nil
 
-    nonisolated init() {}
+    nonisolated init(schema: String = "pgboss") {
+        self.schema = schema
+    }
 
     func fetchSchedulesSQL() -> String? {
         nil

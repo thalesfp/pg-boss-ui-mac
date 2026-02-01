@@ -183,6 +183,7 @@ struct ConnectionDetailView: View {
                 LabeledContent("Port", value: String(connection.port))
                 LabeledContent("Database", value: connection.database)
                 LabeledContent("pg-boss Version", value: connection.pgBossVersion.displayName)
+                LabeledContent("Schema", value: connection.schema)
             }
 
             Section("Authentication") {

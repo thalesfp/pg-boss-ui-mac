@@ -87,7 +87,7 @@ actor ConnectionManager {
             return cached
         }
 
-        let provider = createProvider(for: connection.pgBossVersion)
+        let provider = createProvider(for: connection.pgBossVersion, schema: connection.schema)
 
         // Cache the provider
         providerCache[connection.id] = provider
@@ -96,21 +96,21 @@ actor ConnectionManager {
     }
 
     /// Create a schema provider for a specific version
-    func createProvider(for version: PgBossVersion) -> any SchemaProvider {
-        Self.createProviderSync(for: version)
+    func createProvider(for version: PgBossVersion, schema: String) -> any SchemaProvider {
+        Self.createProviderSync(for: version, schema: schema)
     }
 
     /// Create a schema provider for a specific version (non-isolated)
-    nonisolated static func createProviderSync(for version: PgBossVersion) -> any SchemaProvider {
+    nonisolated static func createProviderSync(for version: PgBossVersion, schema: String = "pgboss") -> any SchemaProvider {
         switch version {
         case .legacy:
-            return SchemaLegacyProvider()
+            return SchemaLegacyProvider(schema: schema)
         case .v9:
-            return SchemaV9Provider()
+            return SchemaV9Provider(schema: schema)
         case .v10:
-            return SchemaV10Provider()
+            return SchemaV10Provider(schema: schema)
         case .v11Plus:
-            return SchemaV11Provider()
+            return SchemaV11Provider(schema: schema)
         }
     }
 

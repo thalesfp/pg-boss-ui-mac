@@ -24,9 +24,20 @@ private struct ConnectionFormData {
     var clientCertificatePath: String = ""
     var clientKeyPath: String = ""
     var pgBossVersion: PgBossVersion = .v11Plus
+    var schema: String = "pgboss"
 
     var isValid: Bool {
-        !name.isEmpty && !host.isEmpty && !database.isEmpty && !username.isEmpty && Int(port) != nil
+        !name.isEmpty && !host.isEmpty && !database.isEmpty && !username.isEmpty && Int(port) != nil && Connection.isValidSchemaName(schema)
+    }
+
+    var schemaValidationError: String? {
+        guard !schema.isEmpty else {
+            return "Schema name cannot be empty"
+        }
+        guard Connection.isValidSchemaName(schema) else {
+            return Connection.schemaNameRequirements
+        }
+        return nil
     }
 
     init() {}
@@ -44,6 +55,7 @@ private struct ConnectionFormData {
         clientCertificatePath = connection.clientCertificatePath
         clientKeyPath = connection.clientKeyPath
         pgBossVersion = connection.pgBossVersion
+        schema = connection.schema
     }
 
     func toConnection(id: UUID) -> Connection {
@@ -60,7 +72,8 @@ private struct ConnectionFormData {
             caCertificatePath: caCertificatePath,
             clientCertificatePath: clientCertificatePath,
             clientKeyPath: clientKeyPath,
-            pgBossVersion: pgBossVersion
+            pgBossVersion: pgBossVersion,
+            schema: schema
         )
     }
 }
@@ -103,6 +116,17 @@ struct ConnectionFormView: View {
                     Picker("pg-boss Version", selection: $formData.pgBossVersion) {
                         ForEach(PgBossVersion.allCases, id: \.self) { version in
                             Text(version.displayName).tag(version)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
+                        TextField("Schema", text: $formData.schema)
+                            .help("PostgreSQL schema name where pg-boss tables are located (default: pgboss)")
+
+                        if let error = formData.schemaValidationError {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(DesignTokens.Colors.warning)
                         }
                     }
                 }

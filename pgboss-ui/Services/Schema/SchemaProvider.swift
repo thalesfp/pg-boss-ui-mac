@@ -100,6 +100,16 @@ protocol SchemaProvider: Sendable {
     /// The pg-boss version this provider supports
     var version: PgBossVersion { get }
 
+    /// The PostgreSQL schema name where pg-boss tables are located.
+    ///
+    /// **Security Note:** Schema names are validated by `Connection.isValidSchemaName(_:)` to ensure
+    /// they are safe PostgreSQL identifiers that can be used in SQL without quoting or escaping.
+    /// Only lowercase letters, digits, underscores, and dollar signs are allowed, starting with
+    /// a letter or underscore. This prevents SQL injection and ensures compatibility.
+    ///
+    /// Safe to use in string interpolation: `FROM \(schema).job`
+    var schema: String { get }
+
     /// Column mappings for the job table
     var jobColumns: JobColumnMapping { get }
 
@@ -202,7 +212,7 @@ extension SchemaProvider {
             COUNT(*) FILTER (WHERE state = 'completed') as completed,
             COUNT(*) FILTER (WHERE state = 'failed') as failed,
             COUNT(*) FILTER (WHERE state = 'cancelled') as cancelled
-        FROM pgboss.job
+        FROM \(schema).job
         GROUP BY name
         ORDER BY name
         """
@@ -223,7 +233,7 @@ extension SchemaProvider {
         }
 
         let whereClause = conditions.joined(separator: " AND ")
-        return "SELECT COUNT(*) FROM pgboss.job WHERE \(whereClause)"
+        return "SELECT COUNT(*) FROM \(schema).job WHERE \(whereClause)"
     }
 
     func fetchJobsSQL(hasStateFilter: Bool, searchField: JobSearchField?, searchText: String?, sortColumn: String, sortDirection: String) -> String {
@@ -247,7 +257,7 @@ extension SchemaProvider {
 
         return """
             SELECT \(jobSelectColumns())
-            FROM pgboss.job
+            FROM \(schema).job
             WHERE \(whereClause)
             ORDER BY \(sortColumn) \(sortDirection) NULLS LAST
             LIMIT \(limitParam) OFFSET \(offsetParam)
@@ -280,16 +290,16 @@ extension SchemaProvider {
     }
 
     func updateJobStateSQL() -> String {
-        "UPDATE pgboss.job SET state = $1 WHERE id = $2"
+        "UPDATE \(schema).job SET state = $1 WHERE id = $2"
     }
 
     func deleteJobSQL() -> String {
-        "DELETE FROM pgboss.job WHERE id = $1"
+        "DELETE FROM \(schema).job WHERE id = $1"
     }
 
     func retryAllFailedSQL() -> String {
         """
-        UPDATE pgboss.job
+        UPDATE \(schema).job
         SET state = 'retry'
         WHERE name = $1 AND state = 'failed'
         """
@@ -297,7 +307,7 @@ extension SchemaProvider {
 
     func cancelAllPendingSQL() -> String {
         """
-        UPDATE pgboss.job
+        UPDATE \(schema).job
         SET state = 'cancelled'
         WHERE name = $1 AND state IN ('created', 'retry')
         """
@@ -305,14 +315,14 @@ extension SchemaProvider {
 
     func purgeCompletedSQL() -> String {
         """
-        DELETE FROM pgboss.job
+        DELETE FROM \(schema).job
         WHERE name = $1 AND state = 'completed'
         """
     }
 
     func purgeFailedSQL() -> String {
         """
-        DELETE FROM pgboss.job
+        DELETE FROM \(schema).job
         WHERE name = $1 AND state = 'failed'
         """
     }
@@ -323,7 +333,7 @@ extension SchemaProvider {
             COUNT(*) FILTER (WHERE state = 'created') as created_jobs,
             COUNT(*) FILTER (WHERE state = 'active') as active_jobs,
             COUNT(*) FILTER (WHERE state = 'retry') as retry_jobs
-        FROM pgboss.job
+        FROM \(schema).job
         WHERE name = $1
         """
     }
@@ -344,7 +354,7 @@ extension SchemaProvider {
                     FILTER (WHERE \(cols.startedOn) IS NOT NULL\(timeFilter)) as avg_wait_time,
                 AVG(EXTRACT(EPOCH FROM (\(cols.completedOn) - \(cols.createdOn))))
                     FILTER (WHERE \(cols.completedOn) IS NOT NULL\(timeFilter)) as avg_end_to_end_time
-            FROM pgboss.job
+            FROM \(schema).job
             WHERE name = $1
             """
     }
@@ -360,7 +370,7 @@ extension SchemaProvider {
                 SELECT
                     to_timestamp(floor(EXTRACT(EPOCH FROM \(cols.completedOn)) / \(bucketSeconds)) * \(bucketSeconds)) as bucket,
                     state
-                FROM pgboss.job
+                FROM \(schema).job
                 WHERE name = $1
                   AND \(cols.completedOn) >= $2
                   AND state IN ('completed', 'failed')
@@ -381,7 +391,7 @@ extension SchemaProvider {
             SELECT
                 COUNT(*) as completed_count,
                 AVG(EXTRACT(EPOCH FROM (\(cols.completedOn) - \(cols.startedOn)))) as avg_processing_time
-            FROM pgboss.job
+            FROM \(schema).job
             WHERE name = $1
                 AND state = 'completed'
                 AND \(cols.completedOn) >= NOW() - INTERVAL '15 minutes'

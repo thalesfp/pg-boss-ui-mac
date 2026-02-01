@@ -12,13 +12,16 @@ import Foundation
 /// Has archive tables but no schedule table
 struct SchemaV9Provider: SchemaProvider {
     let version: PgBossVersion = .v9
+    let schema: String
 
     let jobColumns: JobColumnMapping = .camelCase
 
     // v9 doesn't have schedule table
     let scheduleColumns: ScheduleColumnMapping? = nil
 
-    nonisolated init() {}
+    nonisolated init(schema: String = "pgboss") {
+        self.schema = schema
+    }
 
     func fetchSchedulesSQL() -> String? {
         nil

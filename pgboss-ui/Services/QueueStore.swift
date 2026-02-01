@@ -115,8 +115,11 @@ class QueueStore {
             throw QueueService.QueueServiceError.connectionFailed("No connection configured")
         }
 
-        // Use the user-selected pg-boss version from the connection
-        let provider = ConnectionManager.createProviderSync(for: connection.pgBossVersion)
+        // Use the user-selected pg-boss version and schema from the connection
+        let provider = ConnectionManager.createProviderSync(
+            for: connection.pgBossVersion,
+            schema: connection.schema
+        )
         self.schemaProvider = provider
         return provider
     }

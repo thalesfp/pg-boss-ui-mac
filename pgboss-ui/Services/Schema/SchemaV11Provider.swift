@@ -12,12 +12,15 @@ import Foundation
 /// No archive table (removed in v11), uses partitioning
 struct SchemaV11Provider: SchemaProvider {
     let version: PgBossVersion = .v11Plus
+    let schema: String
 
     let jobColumns: JobColumnMapping = .snakeCase
 
     let scheduleColumns: ScheduleColumnMapping? = .snakeCase
 
-    nonisolated init() {}
+    nonisolated init(schema: String = "pgboss") {
+        self.schema = schema
+    }
 
     func fetchSchedulesSQL() -> String? {
         let cols = scheduleColumns!
@@ -25,7 +28,7 @@ struct SchemaV11Provider: SchemaProvider {
             SELECT \(cols.name), \(cols.cron), \(cols.timezone), \
             \(cols.data)::text, \(cols.options)::text, \
             \(cols.createdOn), \(cols.updatedOn)
-            FROM pgboss.schedule
+            FROM \(schema).schedule
             ORDER BY \(cols.name)
             """
     }
@@ -33,7 +36,7 @@ struct SchemaV11Provider: SchemaProvider {
     func fetchQueueConfigSQL() -> String? {
         """
         SELECT name, retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
-        FROM pgboss.queue
+        FROM \(schema).queue
         """
     }
 }
