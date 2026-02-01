@@ -124,8 +124,10 @@ struct MockData {
     ]
 
     static let schedules: [Schedule] = [
+        // v10 style schedule (nil key)
         Schedule(
             name: "daily-report",
+            key: nil,  // v10
             cron: "0 9 * * *",
             timezone: "America/New_York",
             data: """
@@ -138,8 +140,11 @@ struct MockData {
             createdOn: Date().addingTimeInterval(-86400 * 30),
             updatedOn: Date().addingTimeInterval(-86400)
         ),
+
+        // v11+ style schedule with empty key
         Schedule(
             name: "cleanup-old-jobs",
+            key: "",  // v11+ empty key
             cron: "0 0 * * *",
             timezone: nil,
             data: nil,
@@ -147,8 +152,11 @@ struct MockData {
             createdOn: Date().addingTimeInterval(-86400 * 60),
             updatedOn: Date().addingTimeInterval(-86400 * 60)
         ),
+
+        // v11+ style with non-empty key
         Schedule(
             name: "sync-inventory",
+            key: "warehouse-primary",  // v11+ with key
             cron: "*/15 * * * *",
             timezone: "UTC",
             data: """
@@ -159,6 +167,18 @@ struct MockData {
             options: nil,
             createdOn: Date().addingTimeInterval(-86400 * 7),
             updatedOn: Date().addingTimeInterval(-3600)
+        ),
+
+        // Additional schedule with same name, different key
+        Schedule(
+            name: "sync-inventory",
+            key: "warehouse-backup",  // Same name, different key
+            cron: "*/30 * * * *",
+            timezone: "UTC",
+            data: nil,
+            options: nil,
+            createdOn: Date().addingTimeInterval(-86400 * 3),
+            updatedOn: Date().addingTimeInterval(-1800)
         )
     ]
 

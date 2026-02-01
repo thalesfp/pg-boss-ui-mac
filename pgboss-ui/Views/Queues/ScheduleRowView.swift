@@ -13,11 +13,25 @@ struct ScheduleRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.small) {
-            Text(schedule.name)
-                .font(.system(size: DesignTokens.Sidebar.scheduleNameSize))
-                .fontWeight(DesignTokens.Typography.scheduleNameWeight)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
+            HStack(spacing: DesignTokens.Spacing.xSmall) {
+                Text(schedule.name)
+                    .font(.system(size: DesignTokens.Sidebar.scheduleNameSize))
+                    .fontWeight(DesignTokens.Typography.scheduleNameWeight)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                // Show key badge for v11+ schedules with non-empty keys
+                if let key = schedule.key, !key.isEmpty {
+                    Text(key)
+                        .font(.system(size: 9))
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(.quaternary)
+                        .cornerRadius(4)
+                }
+            }
 
             HStack(spacing: DesignTokens.Spacing.xSmall) {
                 Image(systemName: "clock")
@@ -54,6 +68,7 @@ struct ScheduleRowView: View {
         ScheduleRowView(
             schedule: Schedule(
                 name: "daily-report",
+                key: nil,  // v10 style
                 cron: "0 9 * * *",
                 timezone: "America/New_York",
                 data: nil,
@@ -66,6 +81,7 @@ struct ScheduleRowView: View {
         ScheduleRowView(
             schedule: Schedule(
                 name: "cleanup-old-jobs",
+                key: "",  // v11+ empty key
                 cron: "0 0 * * *",
                 timezone: nil,
                 data: nil,
@@ -77,7 +93,8 @@ struct ScheduleRowView: View {
 
         ScheduleRowView(
             schedule: Schedule(
-                name: "sync-every-5-minutes",
+                name: "sync-inventory",
+                key: "warehouse-1",  // v11+ with key
                 cron: "*/5 * * * *",
                 timezone: "UTC",
                 data: nil,

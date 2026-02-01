@@ -24,24 +24,44 @@ struct QueuesView: View {
                     QueueListView(
                         queues: store.queues,
                         schedules: store.schedules,
-                        selectedQueueId: Bindable(store).selectedQueueId,
+                        selectedItem: Bindable(store).selectedItem,
                         isLoading: store.isLoadingQueues
                     )
                     .navigationSplitViewColumnWidth(min: 250, ideal: 280, max: 350)
                 } detail: {
-                    if let queue = store.selectedQueue {
-                        QueueDetailView(queue: queue, store: store, selectedTab: $selectedTab)
-                    } else {
+                    switch store.selectedItem {
+                    case .queue:
+                        if let queue = store.selectedQueue {
+                            QueueDetailView(queue: queue, store: store, selectedTab: $selectedTab)
+                        } else {
+                            ContentUnavailableView {
+                                Label("Queue Not Found", systemImage: "exclamationmark.triangle")
+                            } description: {
+                                Text("The selected queue may have been deleted or is no longer available.")
+                            }
+                        }
+                    case .schedule:
+                        if let schedule = store.selectedSchedule {
+                            ScheduleDetailView(schedule: schedule)
+                        } else {
+                            ContentUnavailableView {
+                                Label("Schedule Not Found", systemImage: "exclamationmark.triangle")
+                            } description: {
+                                Text("The selected schedule may have been deleted or schedules may not be supported in this pg-boss version.")
+                            }
+                        }
+                    case .none:
                         ContentUnavailableView {
-                            Label("Select a Queue", systemImage: "list.bullet.rectangle")
+                            Label("Select a Queue or Schedule", systemImage: "list.bullet.rectangle")
                         } description: {
-                            Text("Choose a queue from the sidebar to view its jobs.")
+                            Text("Choose an item from the sidebar to view its details.")
                         }
                     }
                 }
                 .toolbar {
                     ToolbarItem(placement: .principal) {
-                        if store.selectedQueueId != nil {
+                        // Only show tab picker when a queue is selected (not a schedule)
+                        if case .queue = store.selectedItem {
                             SegmentedTabPicker(
                                 selection: $selectedTab,
                                 displayName: { $0.displayName },
@@ -125,11 +145,14 @@ struct QueuesView: View {
                         Text(error)
                     }
                 }
-                .onChange(of: store.selectedQueueId) {
+                .onChange(of: store.selectedItem) {
                     Task {
-                        store.selectedJobIds.removeAll()
-                        store.currentPage = 0
-                        await store.refreshJobs()
+                        // Only refresh jobs when a queue is selected
+                        if case .queue = store.selectedItem {
+                            store.selectedJobIds.removeAll()
+                            store.currentPage = 0
+                            await store.refreshJobs()
+                        }
                     }
                 }
                 .onChange(of: connection) { oldValue, newValue in

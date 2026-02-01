@@ -10,7 +10,7 @@ import SwiftUI
 struct QueueListView: View {
     let queues: [Queue]
     let schedules: [Schedule]
-    @Binding var selectedQueueId: String?
+    @Binding var selectedItem: SidebarSelection?
     let isLoading: Bool
 
     @State private var isQueuesExpanded = true
@@ -28,7 +28,7 @@ struct QueueListView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(selection: $selectedQueueId) {
+                List(selection: $selectedItem) {
                     Section(isExpanded: $isQueuesExpanded) {
                         if queues.isEmpty {
                             ContentUnavailableView {
@@ -38,8 +38,8 @@ struct QueueListView: View {
                             }
                         } else {
                             ForEach(queues) { queue in
-                                QueueRowView(queue: queue, isSelected: selectedQueueId == queue.id)
-                                    .tag(queue.id)
+                                QueueRowView(queue: queue, isSelected: selectedItem == .queue(queue.id))
+                                    .tag(SidebarSelection.queue(queue.id))
                             }
                         }
                     } header: {
@@ -60,7 +60,8 @@ struct QueueListView: View {
                             }
                         } else {
                             ForEach(schedules) { schedule in
-                                ScheduleRowView(schedule: schedule)
+                                ScheduleRowView(schedule: schedule, isSelected: selectedItem == .schedule(schedule.id))
+                                    .tag(SidebarSelection.schedule(schedule.id))
                             }
                         }
                     } header: {
@@ -80,13 +81,13 @@ struct QueueListView: View {
 
 #Preview("With Queues") {
     struct PreviewWrapper: View {
-        @State private var selectedQueueId: String? = nil
+        @State private var selectedItem: SidebarSelection? = nil
 
         var body: some View {
             QueueListView(
                 queues: MockData.queues,
                 schedules: MockData.schedules,
-                selectedQueueId: $selectedQueueId,
+                selectedItem: $selectedItem,
                 isLoading: false
             )
             .frame(width: 280, height: 500)
@@ -98,13 +99,13 @@ struct QueueListView: View {
 
 #Preview("Empty") {
     struct PreviewWrapper: View {
-        @State private var selectedQueueId: String? = nil
+        @State private var selectedItem: SidebarSelection? = nil
 
         var body: some View {
             QueueListView(
                 queues: [],
                 schedules: [],
-                selectedQueueId: $selectedQueueId,
+                selectedItem: $selectedItem,
                 isLoading: false
             )
             .frame(width: 280, height: 400)
@@ -116,13 +117,13 @@ struct QueueListView: View {
 
 #Preview("Loading") {
     struct PreviewWrapper: View {
-        @State private var selectedQueueId: String? = nil
+        @State private var selectedItem: SidebarSelection? = nil
 
         var body: some View {
             QueueListView(
                 queues: [],
                 schedules: [],
-                selectedQueueId: $selectedQueueId,
+                selectedItem: $selectedItem,
                 isLoading: true
             )
             .frame(width: 280, height: 400)
