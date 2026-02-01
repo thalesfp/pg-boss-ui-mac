@@ -46,6 +46,11 @@ class ConnectionStore {
         do {
             try KeychainHelper.savePassword(connection.password, for: connection.id)
             try save()  // Save AFTER keychain succeeds to avoid partial state
+            // Clear ConnectionManager's provider cache for this connection
+            // This ensures any other code paths get a fresh provider with updated schema/version
+            Task {
+                await ConnectionManager.shared.clearCache(for: connection.id)
+            }
             lastError = nil
         } catch {
             // Rollback on failure

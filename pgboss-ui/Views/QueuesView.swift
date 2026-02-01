@@ -18,10 +18,9 @@ struct QueuesView: View {
         connectionStore.connections.first { $0.id == connectionId }
     }
 
-    var body: some View {
-        Group {
-            if let connection = connection {
-                NavigationSplitView {
+    @ViewBuilder
+    private func queueView(for connection: Connection) -> some View {
+        NavigationSplitView {
                     QueueListView(
                         queues: store.queues,
                         schedules: store.schedules,
@@ -133,6 +132,28 @@ struct QueuesView: View {
                         await store.refreshJobs()
                     }
                 }
+                .onChange(of: connection) { oldValue, newValue in
+                    // Only refresh if schema or version changed
+                    let schemaChanged = oldValue.schema != newValue.schema
+                    let versionChanged = oldValue.pgBossVersion != newValue.pgBossVersion
+
+                    if schemaChanged || versionChanged {
+                        Task {
+                            store.setConnection(newValue)
+                            await store.refreshQueues()
+                            await store.refreshSchedules()
+                            if store.selectedQueueId != nil {
+                                await store.refreshJobs()
+                            }
+                        }
+                    }
+                }
+    }
+
+    var body: some View {
+        Group {
+            if let connection = connection {
+                queueView(for: connection)
             } else {
                 ContentUnavailableView {
                     Label("Connection Not Found", systemImage: "exclamationmark.triangle")
