@@ -28,16 +28,17 @@ struct QueueStats: Hashable {
 }
 
 struct QueueConfig: Hashable {
-    var retentionSeconds: Int      // stored as seconds (v10 converts from minutes)
+    var retentionSeconds: Int?     // stored as seconds (v10 converts from minutes)
     var deletionSeconds: Int?      // v11+ only (nil for v10)
-    var expireSeconds: Int
-    var retryLimit: Int
-    var policy: String
+    var expireSeconds: Int?
+    var retryLimit: Int?
+    var policy: String?
 }
 
 extension QueueConfig {
-    func formattedRetention() -> String {
-        Self.formatDuration(seconds: retentionSeconds)
+    func formattedRetention() -> String? {
+        guard let seconds = retentionSeconds else { return nil }
+        return Self.formatDuration(seconds: seconds)
     }
 
     func formattedDeletion() -> String? {
@@ -45,8 +46,9 @@ extension QueueConfig {
         return Self.formatDuration(seconds: seconds)
     }
 
-    func formattedExpire() -> String {
-        Self.formatDuration(seconds: expireSeconds)
+    func formattedExpire() -> String? {
+        guard let seconds = expireSeconds else { return nil }
+        return Self.formatDuration(seconds: seconds)
     }
 
     static func formatDuration(seconds: Int) -> String {

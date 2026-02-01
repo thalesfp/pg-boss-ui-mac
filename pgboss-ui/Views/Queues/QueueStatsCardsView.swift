@@ -69,15 +69,25 @@ struct QueueConfigInfoView: View {
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.large) {
-            configItem(icon: "clock.badge.checkmark", label: "Retention", value: config.formattedRetention())
+            if let retention = config.formattedRetention() {
+                configItem(icon: "clock.badge.checkmark", label: "Retention", value: retention)
+            }
 
             if let deletion = config.formattedDeletion() {
                 configItem(icon: "trash.circle", label: "Delete after", value: deletion)
             }
 
-            configItem(icon: "hourglass", label: "Expire", value: config.formattedExpire())
-            configItem(icon: "arrow.counterclockwise", label: "Retry limit", value: "\(config.retryLimit)")
-            configItem(icon: "gearshape", label: "Policy", value: config.policy)
+            if let expire = config.formattedExpire() {
+                configItem(icon: "hourglass", label: "Expire", value: expire)
+            }
+
+            if let retryLimit = config.retryLimit {
+                configItem(icon: "arrow.counterclockwise", label: "Retry limit", value: "\(retryLimit)")
+            }
+
+            if let policy = config.policy {
+                configItem(icon: "gearshape", label: "Policy", value: policy)
+            }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
