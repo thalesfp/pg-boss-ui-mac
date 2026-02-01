@@ -12,7 +12,7 @@ import Observation
 class QueueStore {
     // Queue state
     var queues: [Queue] = []
-    var selectedQueueId: String?
+    var selectedItem: SidebarSelection?
 
     // Schedule state
     var schedules: [Schedule] = []
@@ -71,9 +71,20 @@ class QueueStore {
     // Schema provider (cached)
     private var schemaProvider: (any SchemaProvider)?
 
+    /// Computed property for backward compatibility
+    var selectedQueueId: String? {
+        guard case .queue(let id) = selectedItem else { return nil }
+        return id
+    }
+
     var selectedQueue: Queue? {
         guard let id = selectedQueueId else { return nil }
         return queues.first { $0.id == id }
+    }
+
+    var selectedSchedule: Schedule? {
+        guard case .schedule(let scheduleId) = selectedItem else { return nil }
+        return schedules.first { $0.id == scheduleId }
     }
 
     var totalPages: Int {
@@ -169,7 +180,7 @@ class QueueStore {
 
             // If selected queue no longer exists, clear selection
             if let selectedId = selectedQueueId, !queues.contains(where: { $0.id == selectedId }) {
-                selectedQueueId = nil
+                selectedItem = nil
                 jobs = []
                 totalJobs = 0
             }
@@ -253,7 +264,7 @@ class QueueStore {
 
     @MainActor
     func selectQueue(_ queueId: String?) async {
-        selectedQueueId = queueId
+        selectedItem = queueId.map { .queue($0) }
         selectedJobIds.removeAll()
         currentPage = 0
         await refreshJobs()

@@ -16,7 +16,7 @@ struct SchemaV11Provider: SchemaProvider {
 
     let jobColumns: JobColumnMapping = .snakeCase
 
-    let scheduleColumns: ScheduleColumnMapping? = .snakeCase
+    let scheduleColumns: ScheduleColumnMapping? = .snakeCaseV11Plus
 
     nonisolated init(schema: String = "pgboss") {
         self.schema = schema
@@ -25,11 +25,11 @@ struct SchemaV11Provider: SchemaProvider {
     func fetchSchedulesSQL() -> String? {
         let cols = scheduleColumns!
         return """
-            SELECT \(cols.name), \(cols.cron), \(cols.timezone), \
+            SELECT \(cols.name), \(cols.key!), \(cols.cron), \(cols.timezone), \
             \(cols.data)::text, \(cols.options)::text, \
             \(cols.createdOn), \(cols.updatedOn)
             FROM \(schema).schedule
-            ORDER BY \(cols.name)
+            ORDER BY \(cols.name), \(cols.key!)
             """
     }
 

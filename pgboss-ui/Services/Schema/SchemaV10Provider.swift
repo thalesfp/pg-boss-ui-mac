@@ -16,7 +16,7 @@ struct SchemaV10Provider: SchemaProvider {
 
     let jobColumns: JobColumnMapping = .snakeCase
 
-    let scheduleColumns: ScheduleColumnMapping? = .snakeCase
+    let scheduleColumns: ScheduleColumnMapping? = .snakeCaseV10
 
     nonisolated init(schema: String = "pgboss") {
         self.schema = schema

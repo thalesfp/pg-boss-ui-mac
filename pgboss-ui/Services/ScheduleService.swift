@@ -46,20 +46,44 @@ struct ScheduleService {
                     defer { cursor.close() }
 
                     var schedules: [Schedule] = []
+                    let hasKeyColumn = provider.scheduleColumns?.key != nil
 
                     for row in cursor {
                         let columns = try row.get().columns
 
-                        let name = try columns[0].string()
-                        let cron = try columns[1].string()
-                        let timezone = try columns[2].optionalString()
-                        let data = try columns[3].optionalString()
-                        let options = try columns[4].optionalString()
-                        let createdOn = try columns[5].timestampWithTimeZone().date
-                        let updatedOn = try columns[6].timestampWithTimeZone().date
+                        var columnIndex = 0
+                        let name = try columns[columnIndex].string()
+                        columnIndex += 1
+
+                        // Parse key if present (v11+)
+                        let key: String?
+                        if hasKeyColumn {
+                            key = try columns[columnIndex].string()
+                            columnIndex += 1
+                        } else {
+                            key = nil
+                        }
+
+                        let cron = try columns[columnIndex].string()
+                        columnIndex += 1
+
+                        let timezone = try columns[columnIndex].optionalString()
+                        columnIndex += 1
+
+                        let data = try columns[columnIndex].optionalString()
+                        columnIndex += 1
+
+                        let options = try columns[columnIndex].optionalString()
+                        columnIndex += 1
+
+                        let createdOn = try columns[columnIndex].timestampWithTimeZone().date
+                        columnIndex += 1
+
+                        let updatedOn = try columns[columnIndex].timestampWithTimeZone().date
 
                         schedules.append(Schedule(
                             name: name,
+                            key: key,
                             cron: cron,
                             timezone: timezone,
                             data: data,

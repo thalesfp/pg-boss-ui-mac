@@ -76,6 +76,7 @@ struct JobColumnMapping: Sendable {
 /// Column name mappings for schedule table fields
 struct ScheduleColumnMapping: Sendable {
     let name: String
+    let key: String?          // nil for v10, column name for v11+
     let cron: String
     let timezone: String
     let data: String
@@ -83,9 +84,22 @@ struct ScheduleColumnMapping: Sendable {
     let createdOn: String
     let updatedOn: String
 
-    /// v10+: snake_case columns (schedule table didn't exist before v10)
-    static let snakeCase = ScheduleColumnMapping(
+    // v10: No key field (7 columns)
+    static let snakeCaseV10 = ScheduleColumnMapping(
         name: "name",
+        key: nil,             // v10 has no key column
+        cron: "cron",
+        timezone: "timezone",
+        data: "data",
+        options: "options",
+        createdOn: "created_on",
+        updatedOn: "updated_on"
+    )
+
+    // v11+: With key field (8 columns)
+    static let snakeCaseV11Plus = ScheduleColumnMapping(
+        name: "name",
+        key: "key",           // v11+ has key column
         cron: "cron",
         timezone: "timezone",
         data: "data",
