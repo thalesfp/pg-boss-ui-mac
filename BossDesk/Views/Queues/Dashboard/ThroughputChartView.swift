@@ -68,6 +68,7 @@ struct ThroughputChartView: View {
                     systemImage: "chart.xyaxis.line",
                     description: Text("No completed jobs in this time range")
                 )
+                .frame(maxWidth: .infinity)
                 .frame(height: 200)
             } else {
                 Chart(data.points) { point in
