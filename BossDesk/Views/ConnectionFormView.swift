@@ -23,7 +23,6 @@ private struct ConnectionFormData {
     var caCertificatePath: String = ""
     var clientCertificatePath: String = ""
     var clientKeyPath: String = ""
-    var pgBossVersion: PgBossVersion = .v11Plus
     var schema: String = "pgboss"
 
     var isValid: Bool {
@@ -54,7 +53,6 @@ private struct ConnectionFormData {
         caCertificatePath = connection.caCertificatePath
         clientCertificatePath = connection.clientCertificatePath
         clientKeyPath = connection.clientKeyPath
-        pgBossVersion = connection.pgBossVersion
         schema = connection.schema
     }
 
@@ -72,7 +70,6 @@ private struct ConnectionFormData {
             caCertificatePath: caCertificatePath,
             clientCertificatePath: clientCertificatePath,
             clientKeyPath: clientKeyPath,
-            pgBossVersion: pgBossVersion,
             schema: schema
         )
     }
@@ -113,11 +110,6 @@ struct ConnectionFormView: View {
                     TextField("Host", text: $formData.host)
                     TextField("Port", text: $formData.port)
                     TextField("Database", text: $formData.database)
-                    Picker("pg-boss Version", selection: $formData.pgBossVersion) {
-                        ForEach(PgBossVersion.allCases, id: \.self) { version in
-                            Text(version.displayName).tag(version)
-                        }
-                    }
 
                     VStack(alignment: .leading, spacing: DesignTokens.Spacing.xSmall) {
                         TextField("Schema", text: $formData.schema)

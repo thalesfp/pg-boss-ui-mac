@@ -36,10 +36,9 @@ struct Connection: Identifiable, Hashable, Codable {
     var caCertificatePath: String
     var clientCertificatePath: String
     var clientKeyPath: String
-    var pgBossVersion: PgBossVersion
     var schema: String
 
-    init(id: UUID = UUID(), name: String, host: String, port: Int = 5432, database: String, username: String, password: String = "", sslMode: SSLMode = .enabled, authMethod: AuthMethod = .auto, caCertificatePath: String = "", clientCertificatePath: String = "", clientKeyPath: String = "", pgBossVersion: PgBossVersion = .v11Plus, schema: String = "pgboss") {
+    init(id: UUID = UUID(), name: String, host: String, port: Int = 5432, database: String, username: String, password: String = "", sslMode: SSLMode = .enabled, authMethod: AuthMethod = .auto, caCertificatePath: String = "", clientCertificatePath: String = "", clientKeyPath: String = "", schema: String = "pgboss") {
         self.id = id
         self.name = name
         self.host = host
@@ -52,7 +51,6 @@ struct Connection: Identifiable, Hashable, Codable {
         self.caCertificatePath = caCertificatePath
         self.clientCertificatePath = clientCertificatePath
         self.clientKeyPath = clientKeyPath
-        self.pgBossVersion = pgBossVersion
         self.schema = schema
     }
 
@@ -60,7 +58,7 @@ struct Connection: Identifiable, Hashable, Codable {
     enum CodingKeys: String, CodingKey {
         case id, name, host, port, database, username
         case sslMode, authMethod, caCertificatePath, clientCertificatePath, clientKeyPath
-        case pgBossVersion, schema
+        case schema
     }
 
     init(from decoder: Decoder) throws {
@@ -77,7 +75,6 @@ struct Connection: Identifiable, Hashable, Codable {
         caCertificatePath = try container.decodeIfPresent(String.self, forKey: .caCertificatePath) ?? ""
         clientCertificatePath = try container.decodeIfPresent(String.self, forKey: .clientCertificatePath) ?? ""
         clientKeyPath = try container.decodeIfPresent(String.self, forKey: .clientKeyPath) ?? ""
-        pgBossVersion = try container.decodeIfPresent(PgBossVersion.self, forKey: .pgBossVersion) ?? .v11Plus
         let decodedSchema = try container.decodeIfPresent(String.self, forKey: .schema) ?? "pgboss"
         schema = Connection.isValidSchemaName(decodedSchema) ? decodedSchema : "pgboss"
     }
@@ -96,7 +93,6 @@ struct Connection: Identifiable, Hashable, Codable {
         try container.encode(caCertificatePath, forKey: .caCertificatePath)
         try container.encode(clientCertificatePath, forKey: .clientCertificatePath)
         try container.encode(clientKeyPath, forKey: .clientKeyPath)
-        try container.encode(pgBossVersion, forKey: .pgBossVersion)
         try container.encode(schema, forKey: .schema)
     }
 

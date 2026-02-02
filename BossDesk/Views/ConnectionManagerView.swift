@@ -129,7 +129,6 @@ struct ConnectionManagerView: View {
                     caCertificatePath: connection.caCertificatePath,
                     clientCertificatePath: connection.clientCertificatePath,
                     clientKeyPath: connection.clientKeyPath,
-                    pgBossVersion: connection.pgBossVersion,
                     schema: connection.schema
                 )
 
@@ -220,7 +219,6 @@ struct ConnectionDetailView: View {
                 LabeledContent("Host", value: connection.host)
                 LabeledContent("Port", value: String(connection.port))
                 LabeledContent("Database", value: connection.database)
-                LabeledContent("pg-boss Version", value: connection.pgBossVersion.displayName)
                 LabeledContent("Schema", value: connection.schema)
             }
 
