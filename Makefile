@@ -1,5 +1,5 @@
-PROJECT = pgboss-ui.xcodeproj
-SCHEME = pgboss-ui
+PROJECT = BossDesk.xcodeproj
+SCHEME = BossDesk
 BUILD_DIR = build
 DIST_DIR = dist
 
@@ -12,7 +12,7 @@ release:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Release build
 
 run: kill build
-	@open "$$(xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Debug -showBuildSettings | grep -m 1 'BUILT_PRODUCTS_DIR' | sed 's/.*= //')/pgboss-ui.app"
+	@open "$$(xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Debug -showBuildSettings | grep -m 1 'BUILT_PRODUCTS_DIR' | sed 's/.*= //')/BossDesk.app"
 
 clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) clean
@@ -20,7 +20,7 @@ clean:
 	rm -rf $(DIST_DIR)
 
 kill:
-	@pkill -x pgboss-ui || true
+	@pkill -x BossDesk || true
 
 dist:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration Release \
@@ -28,12 +28,12 @@ dist:
 		ONLY_ACTIVE_ARCH=NO \
 		build
 	@mkdir -p $(DIST_DIR)
-	@rm -rf "$(DIST_DIR)/pgboss-ui.app"
-	@cp -R "$(BUILD_DIR)/Build/Products/Release/pgboss-ui.app" "$(DIST_DIR)/"
-	@echo "App bundle created at $(DIST_DIR)/pgboss-ui.app"
+	@rm -rf "$(DIST_DIR)/BossDesk.app"
+	@cp -R "$(BUILD_DIR)/Build/Products/Release/BossDesk.app" "$(DIST_DIR)/"
+	@echo "App bundle created at $(DIST_DIR)/BossDesk.app"
 
 dmg: dist
-	@rm -f "$(DIST_DIR)/pgboss-ui.dmg"
-	hdiutil create -volname "pgboss-ui" -srcfolder "$(DIST_DIR)/pgboss-ui.app" \
-		-ov -format UDZO "$(DIST_DIR)/pgboss-ui.dmg"
-	@echo "DMG created at $(DIST_DIR)/pgboss-ui.dmg"
+	@rm -f "$(DIST_DIR)/BossDesk.dmg"
+	hdiutil create -volname "BossDesk" -srcfolder "$(DIST_DIR)/BossDesk.app" \
+		-ov -format UDZO "$(DIST_DIR)/BossDesk.dmg"
+	@echo "DMG created at $(DIST_DIR)/BossDesk.dmg"

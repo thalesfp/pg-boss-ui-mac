@@ -1,7 +1,7 @@
-# pgboss-ui
+# BossDesk
 
 <p align="center">
-  <img src="pgboss-ui/Assets.xcassets/AppIcon.appiconset/icon_256x256@2x.png" width="128" alt="pgboss-ui icon">
+  <img src="BossDesk/Assets.xcassets/AppIcon.appiconset/icon_256x256@2x.png" width="128" alt="BossDesk icon">
 </p>
 
 Native macOS desktop application for managing and monitoring [pg-boss](https://github.com/timgit/pg-boss) job queues.
@@ -28,7 +28,7 @@ make run    # Build and run the app
 make clean  # Clean build artifacts
 ```
 
-Or open `pgboss-ui.xcodeproj` in Xcode and press Cmd+R.
+Or open `BossDesk.xcodeproj` in Xcode and press Cmd+R.
 
 ## License
 
