@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents the pg-boss schema version number from the version table
-struct SchemaVersion: RawRepresentable, Codable, Hashable, Comparable, Sendable {
+nonisolated struct SchemaVersion: RawRepresentable, Codable, Hashable, Comparable, Sendable {
     let rawValue: Int
 
     init(rawValue: Int) {
@@ -41,7 +41,7 @@ struct SchemaVersion: RawRepresentable, Codable, Hashable, Comparable, Sendable 
     }
 }
 
-enum AdapterGroup: String, Sendable {
+nonisolated enum AdapterGroup: String, Sendable {
     case camelCase          // Schema 20-23: camelCase columns, no queue table
     case snakeCaseV10       // Schema 24-25: snake_case, queue/schedule, expire_in
     case snakeCaseV11Plus   // Schema 26-27: snake_case, expire_seconds, advanced
