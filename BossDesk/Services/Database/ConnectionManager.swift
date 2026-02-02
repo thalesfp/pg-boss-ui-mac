@@ -6,17 +6,18 @@
 //
 
 import Foundation
-import PostgresClientKit
-import SSLService
-
-/// Cache key for schema providers, including both connection ID and schema name
-private struct ProviderCacheKey: Hashable {
-    let connectionId: UUID
-    let schema: String
-}
+@preconcurrency import PostgresClientKit
+@preconcurrency import SSLService
 
 /// Centralized connection management
+@preconcurrency
 actor ConnectionManager {
+    /// Cache key for schema providers, including both connection ID and schema name
+    private struct ProviderCacheKey: Hashable, Sendable {
+        let connectionId: UUID
+        let schema: String
+    }
+
     static let shared = ConnectionManager()
 
     private let connectionTimeoutSeconds = 30
@@ -27,12 +28,27 @@ actor ConnectionManager {
     /// Cache of detected schema versions per connection (keyed by connection ID + schema)
     private var detectedVersionCache: [ProviderCacheKey: SchemaVersion] = [:]
 
-    /// Schema detector service
-    private let detector: any SchemaDetecting
+    /// Schema detector service - lazily initialized on first use
+    ///
+    /// Uses lazy initialization to avoid MainActor isolation issues during static initialization.
+    /// The detector is created in a MainActor context when first accessed, which satisfies the
+    /// compiler's isolation requirements while avoiding runtime crashes (SchemaDetector has no
+    /// stored properties and no initialization side effects).
+    private var _detector: (any SchemaDetecting)?
 
-    private init(detector: any SchemaDetecting = SchemaDetector()) {
-        self.detector = detector
+    private func detector() async -> any SchemaDetecting {
+        if let existing = _detector {
+            return existing
+        }
+        // Create on MainActor to satisfy SWIFT_DEFAULT_ACTOR_ISOLATION=MainActor
+        let newDetector = await MainActor.run {
+            SchemaDetector()
+        }
+        _detector = newDetector
+        return newDetector
     }
+
+    private init() {}
 
     // MARK: - Connection Creation
 
@@ -104,7 +120,8 @@ actor ConnectionManager {
         }
 
         // Detect schema version
-        let version = try await detector.detectSchemaVersion(connection: connection)
+        let detectorInstance = await detector()
+        let version = try await detectorInstance.detectSchemaVersion(connection: connection)
         detectedVersionCache[cacheKey] = version
 
         // Create appropriate adapter based on version

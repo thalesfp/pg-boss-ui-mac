@@ -6,12 +6,14 @@
 //
 
 import Foundation
-import PostgresClientKit
+@preconcurrency import PostgresClientKit
 
+@preconcurrency
 protocol SchemaDetecting: Sendable {
     func detectSchemaVersion(connection: Connection) async throws -> SchemaVersion
 }
 
+@preconcurrency
 actor SchemaDetector: SchemaDetecting {
     enum DetectionError: LocalizedError {
         case versionTableNotFound
