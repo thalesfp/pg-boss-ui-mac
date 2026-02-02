@@ -13,6 +13,7 @@ struct ConnectionManagerView: View {
     @State private var selectedConnection: Connection?
     @State private var showingAddSheet = false
     @State private var showingEditSheet = false
+    @State private var showingDuplicateSheet = false
     @State private var showingDeleteConfirmation = false
     @State private var errorMessage: String?
     @State private var showingError = false
@@ -31,6 +32,12 @@ struct ConnectionManagerView: View {
                         showingEditSheet = true
                     } label: {
                         Label("Edit", systemImage: "pencil")
+                    }
+                    Button {
+                        selectedConnection = connection
+                        showingDuplicateSheet = true
+                    } label: {
+                        Label("Duplicate", systemImage: "doc.on.doc")
                     }
                     Button(role: .destructive) {
                         selectedConnection = connection
@@ -98,6 +105,37 @@ struct ConnectionManagerView: View {
                     do {
                         try connectionStore.update(updatedConnection)
                         selectedConnection = updatedConnection
+                        return true
+                    } catch {
+                        errorMessage = error.localizedDescription
+                        showingError = true
+                        return false
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingDuplicateSheet) {
+            if let connection = selectedConnection {
+                let duplicateConnection = Connection(
+                    id: UUID(),
+                    name: connection.name + " (Copy)",
+                    host: connection.host,
+                    port: connection.port,
+                    database: connection.database,
+                    username: connection.username,
+                    password: connection.password,
+                    sslMode: connection.sslMode,
+                    authMethod: connection.authMethod,
+                    caCertificatePath: connection.caCertificatePath,
+                    clientCertificatePath: connection.clientCertificatePath,
+                    clientKeyPath: connection.clientKeyPath,
+                    pgBossVersion: connection.pgBossVersion,
+                    schema: connection.schema
+                )
+
+                ConnectionFormView(existingConnection: duplicateConnection) { newConnection in
+                    do {
+                        try connectionStore.add(newConnection)
                         return true
                     } catch {
                         errorMessage = error.localizedDescription
