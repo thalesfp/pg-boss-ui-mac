@@ -100,14 +100,10 @@ class QueueStore {
         currentPage > 0
     }
 
-    /// The pg-boss version from the current connection
-    var pgBossVersion: PgBossVersion? {
-        connection?.pgBossVersion
-    }
-
-    /// Whether schedules are supported by the selected version
+    /// Whether schedules are supported (determined by detected schema version)
     var supportsSchedules: Bool {
-        pgBossVersion?.hasScheduleTable ?? false
+        // Check if schedule columns are available in the cached provider
+        schemaProvider?.scheduleColumns != nil
     }
 
     func setConnection(_ connection: Connection) {
@@ -116,8 +112,8 @@ class QueueStore {
         self.schemaProvider = nil
     }
 
-    /// Get or create the schema provider for the current connection
-    private func getProvider() throws -> any SchemaProvider {
+    /// Get or create the schema provider for the current connection with auto-detection
+    private func getProvider() async throws -> any SchemaProvider {
         if let provider = schemaProvider {
             return provider
         }
@@ -126,11 +122,8 @@ class QueueStore {
             throw QueueService.QueueServiceError.connectionFailed("No connection configured")
         }
 
-        // Use the user-selected pg-boss version and schema from the connection
-        let provider = ConnectionManager.createProviderSync(
-            for: connection.pgBossVersion,
-            schema: connection.schema
-        )
+        // Auto-detect schema version and get provider
+        let provider = try await ConnectionManager.shared.getProvider(for: connection)
         self.schemaProvider = provider
         return provider
     }
@@ -174,7 +167,7 @@ class QueueStore {
         error = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
 
             queues = try await QueueService.fetchQueues(connection, provider: provider)
 
@@ -197,8 +190,8 @@ class QueueStore {
             return
         }
 
-        // Skip if version doesn't support schedules
-        if let version = pgBossVersion, !version.hasScheduleTable {
+        // Skip if schedules not supported (checked via provider's schedule columns)
+        if !supportsSchedules {
             schedules = []
             return
         }
@@ -206,7 +199,7 @@ class QueueStore {
         isLoadingSchedules = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             schedules = try await ScheduleService.fetchSchedules(connection, provider: provider)
         } catch {
             // Silently handle schedule fetch errors - schedules may not exist in older pg-boss versions
@@ -227,7 +220,7 @@ class QueueStore {
         isLoadingJobs = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
 
             let result = try await QueueService.fetchJobs(
                 connection,
@@ -339,7 +332,7 @@ class QueueStore {
         isLoadingQueueStatus = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
 
             // Fetch recent completion metrics for estimated completion calculation
             let recentMetrics = try await QueueService.fetchRecentCompletionMetrics(
@@ -372,7 +365,7 @@ class QueueStore {
         isLoadingDashboard = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             dashboardStats = try await QueueService.fetchDashboardStats(
                 connection,
                 provider: provider,
@@ -403,7 +396,7 @@ class QueueStore {
         isLoadingThroughput = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             let now = Date()
             let points = try await QueueService.fetchThroughput(
                 connection,
@@ -508,7 +501,7 @@ class QueueStore {
         isLoadingDashboard = true
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             dashboardStats = try await QueueService.fetchDashboardStats(
                 connection,
                 provider: provider,
@@ -582,7 +575,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             try await QueueService.retryJob(connection, provider: provider, jobId: jobId)
             await refreshJobs()
             await refreshQueues()
@@ -606,7 +599,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             try await QueueService.cancelJob(connection, provider: provider, jobId: jobId)
             await refreshJobs()
             await refreshQueues()
@@ -630,7 +623,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             try await QueueService.deleteJob(connection, provider: provider, jobId: jobId)
             selectedJobIds.remove(jobId)
             await refreshJobs()
@@ -659,7 +652,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             var successCount = 0
 
             for jobId in ids {
@@ -696,7 +689,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             var successCount = 0
 
             for jobId in ids {
@@ -733,7 +726,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             var successCount = 0
 
             for jobId in ids {
@@ -770,7 +763,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             let count = try await QueueService.retryAllFailed(connection, provider: provider, queueName: queueName)
             await refreshQueues()
             await refreshJobs()
@@ -794,7 +787,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             let count = try await QueueService.cancelAllPending(connection, provider: provider, queueName: queueName)
             await refreshQueues()
             await refreshJobs()
@@ -818,7 +811,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             let count = try await QueueService.purgeCompleted(connection, provider: provider, queueName: queueName)
             selectedJobIds.removeAll()
             await refreshQueues()
@@ -843,7 +836,7 @@ class QueueStore {
         mutationError = nil
 
         do {
-            let provider = try getProvider()
+            let provider = try await getProvider()
             let count = try await QueueService.purgeFailed(connection, provider: provider, queueName: queueName)
             selectedJobIds.removeAll()
             await refreshQueues()

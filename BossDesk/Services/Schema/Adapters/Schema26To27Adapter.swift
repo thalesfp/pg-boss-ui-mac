@@ -1,21 +1,22 @@
 //
-//  SchemaV11Provider.swift
+//  Schema26To27Adapter.swift
 //  BossDesk
 //
-//  Created by thales on 2026-01-30.
+//  Created by Claude Code on 2026-02-02.
 //
 
 import Foundation
 
-/// Schema provider for pg-boss v11+
-/// Uses snake_case columns with expire_seconds instead of expire_in
-/// No archive table (removed in v11), uses partitioning
-struct SchemaV11Provider: SchemaProvider {
-    let version: PgBossVersion = .v11Plus
+/// Adapter for schema versions 26-27 (pg-boss v11.1+)
+/// - snake_case column naming
+/// - Uses expire_seconds (integer) instead of expire_in
+/// - Has group_id and group_tier columns (schema 27)
+struct Schema26To27Adapter: SchemaProvider {
+    let adapterGroup: AdapterGroup = .snakeCaseV11Plus
+    let supportedVersionRange: ClosedRange<Int> = 26...27
     let schema: String
 
     let jobColumns: JobColumnMapping = .v11Plus
-
     let scheduleColumns: ScheduleColumnMapping? = .snakeCaseV11Plus
 
     nonisolated init(schema: String = "pgboss") {
@@ -35,6 +36,13 @@ struct SchemaV11Provider: SchemaProvider {
             """
     }
 
+    func fetchQueueConfigSQL() -> String? {
+        """
+        SELECT name, retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
+        FROM \(schema).queue
+        """
+    }
+
     func fetchSchedulesSQL() -> String? {
         let cols = scheduleColumns!
         return """
@@ -44,12 +52,5 @@ struct SchemaV11Provider: SchemaProvider {
             FROM \(schema).schedule
             ORDER BY \(cols.name), \(cols.key!)
             """
-    }
-
-    func fetchQueueConfigSQL() -> String? {
-        """
-        SELECT name, retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
-        FROM \(schema).queue
-        """
     }
 }

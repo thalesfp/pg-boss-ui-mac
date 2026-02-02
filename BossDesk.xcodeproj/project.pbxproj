@@ -7,10 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		753A8E47CB4242D094D26350 /* Schema26To27Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8D81A32DDA4DEFBAAE0BAB /* Schema26To27Adapter.swift */; };
+		9A7B8A7F285F443F8C8ADEFA /* Schema24To25Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57A066936564D9E9B606094 /* Schema24To25Adapter.swift */; };
+		82EA449A72FC4357A08CF0BF /* Schema20To23Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B4091B33004B7AB2C7E972 /* Schema20To23Adapter.swift */; };
+		5485D9CE5D63469CADDA07EB /* SchemaDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFE28156AED42EFA03B9C79 /* SchemaDetector.swift */; };
+		21EE5CE6AB164AC1B33D2B66 /* SchemaVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F76F25CBDDD46D4B772F3A4 /* SchemaVersion.swift */; };
 		12000001F2F00000000001 /* PostgresClientKit in Frameworks */ = {isa = PBXBuildFile; productRef = 12000002F2F00000000001 /* PostgresClientKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CB8D81A32DDA4DEFBAAE0BAB /* Schema26To27Adapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema26To27Adapter.swift; sourceTree = "<group>"; };
+		B57A066936564D9E9B606094 /* Schema24To25Adapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema24To25Adapter.swift; sourceTree = "<group>"; };
+		E1B4091B33004B7AB2C7E972 /* Schema20To23Adapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema20To23Adapter.swift; sourceTree = "<group>"; };
+		EEFE28156AED42EFA03B9C79 /* SchemaDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaDetector.swift; sourceTree = "<group>"; };
+		2F76F25CBDDD46D4B772F3A4 /* SchemaVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaVersion.swift; sourceTree = "<group>"; };
 		1242DD482F2BEBF800CD9ECC /* BossDesk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BossDesk.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 

@@ -70,12 +70,6 @@ struct QueuesView: View {
                         }
                     }
 
-                    ToolbarItemGroup(placement: .automatic) {
-                        if let version = store.pgBossVersion {
-                            VersionBadge(version: version)
-                        }
-                    }
-
                     ToolbarItemGroup(placement: .primaryAction) {
                         Menu {
                             Button {
@@ -156,11 +150,10 @@ struct QueuesView: View {
                     }
                 }
                 .onChange(of: connection) { oldValue, newValue in
-                    // Only refresh if schema or version changed
+                    // Only refresh if schema changed (version is now auto-detected)
                     let schemaChanged = oldValue.schema != newValue.schema
-                    let versionChanged = oldValue.pgBossVersion != newValue.pgBossVersion
 
-                    if schemaChanged || versionChanged {
+                    if schemaChanged {
                         Task {
                             store.setConnection(newValue)
                             await store.refreshQueues()

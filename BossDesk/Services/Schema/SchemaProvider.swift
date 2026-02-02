@@ -133,8 +133,11 @@ struct ScheduleColumnMapping: Sendable {
 
 /// Protocol defining SQL queries and column mappings for a pg-boss schema version
 protocol SchemaProvider: Sendable {
-    /// The pg-boss version this provider supports
-    var version: PgBossVersion { get }
+    /// The adapter group this provider belongs to
+    var adapterGroup: AdapterGroup { get }
+
+    /// The schema version range this adapter supports
+    var supportedVersionRange: ClosedRange<Int> { get }
 
     /// The PostgreSQL schema name where pg-boss tables are located.
     ///

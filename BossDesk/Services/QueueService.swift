@@ -27,7 +27,7 @@ struct QueueService {
     }
 
     static func fetchQueues(_ connection: Connection, provider: any SchemaProvider) async throws -> [Queue] {
-        let isV11 = provider.version == .v11Plus
+        let isV11Plus = provider.adapterGroup == .snakeCaseV11Plus
 
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
@@ -49,7 +49,7 @@ struct QueueService {
                             let name = try columns[0].string()
 
                             let config: QueueConfig
-                            if isV11 {
+                            if isV11Plus {
                                 // v11: retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
                                 let retentionSeconds = try columns[1].optionalInt()
                                 let deletionSeconds = try columns[2].optionalInt()

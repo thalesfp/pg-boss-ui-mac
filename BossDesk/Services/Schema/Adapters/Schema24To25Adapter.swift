@@ -1,25 +1,33 @@
 //
-//  SchemaV10Provider.swift
+//  Schema24To25Adapter.swift
 //  BossDesk
 //
-//  Created by thales on 2026-01-30.
+//  Created by Claude Code on 2026-02-02.
 //
 
 import Foundation
 
-/// Schema provider for pg-boss v10
-/// Uses snake_case columns (created_on, started_on, etc.)
-/// Has both archive and schedule tables
-struct SchemaV10Provider: SchemaProvider {
-    let version: PgBossVersion = .v10
+/// Adapter for schema versions 24-25 (pg-boss v10.x)
+/// - snake_case column naming
+/// - Has queue and schedule tables
+/// - Uses expire_in (interval) column
+struct Schema24To25Adapter: SchemaProvider {
+    let adapterGroup: AdapterGroup = .snakeCaseV10
+    let supportedVersionRange: ClosedRange<Int> = 24...25
     let schema: String
 
     let jobColumns: JobColumnMapping = .snakeCase
-
     let scheduleColumns: ScheduleColumnMapping? = .snakeCaseV10
 
     nonisolated init(schema: String = "pgboss") {
         self.schema = schema
+    }
+
+    func fetchQueueConfigSQL() -> String? {
+        """
+        SELECT name, retention_minutes, expire_seconds, retry_limit, policy
+        FROM \(schema).queue
+        """
     }
 
     func fetchSchedulesSQL() -> String? {
@@ -31,12 +39,5 @@ struct SchemaV10Provider: SchemaProvider {
             FROM \(schema).schedule
             ORDER BY \(cols.name)
             """
-    }
-
-    func fetchQueueConfigSQL() -> String? {
-        """
-        SELECT name, retention_minutes, expire_seconds, retry_limit, policy
-        FROM \(schema).queue
-        """
     }
 }

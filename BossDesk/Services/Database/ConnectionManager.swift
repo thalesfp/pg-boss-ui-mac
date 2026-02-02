@@ -9,16 +9,30 @@ import Foundation
 import PostgresClientKit
 import SSLService
 
+/// Cache key for schema providers, including both connection ID and schema name
+private struct ProviderCacheKey: Hashable {
+    let connectionId: UUID
+    let schema: String
+}
+
 /// Centralized connection management
 actor ConnectionManager {
     static let shared = ConnectionManager()
 
     private let connectionTimeoutSeconds = 30
 
-    /// Cache of schema providers per connection (keyed by connection ID)
-    private var providerCache: [UUID: any SchemaProvider] = [:]
+    /// Cache of schema providers per connection (keyed by connection ID + schema)
+    private var providerCache: [ProviderCacheKey: any SchemaProvider] = [:]
 
-    private init() {}
+    /// Cache of detected schema versions per connection (keyed by connection ID + schema)
+    private var detectedVersionCache: [ProviderCacheKey: SchemaVersion] = [:]
+
+    /// Schema detector service
+    private let detector: any SchemaDetecting
+
+    private init(detector: any SchemaDetecting = SchemaDetector()) {
+        self.detector = detector
+    }
 
     // MARK: - Connection Creation
 
@@ -78,52 +92,86 @@ actor ConnectionManager {
 
     // MARK: - Schema Provider
 
-    /// Get the appropriate schema provider for a connection
+    /// Get provider with automatic schema detection
     /// - Parameter connection: The Connection configuration
-    /// - Returns: A SchemaProvider for the connection's selected pg-boss version
-    func getProvider(for connection: Connection) -> any SchemaProvider {
-        // Check provider cache first
-        if let cached = providerCache[connection.id] {
+    /// - Returns: A SchemaProvider for the connection's detected schema version
+    func getProvider(for connection: Connection) async throws -> any SchemaProvider {
+        let cacheKey = ProviderCacheKey(connectionId: connection.id, schema: connection.schema)
+
+        // Check cache first
+        if let cached = providerCache[cacheKey] {
             return cached
         }
 
-        let provider = createProvider(for: connection.pgBossVersion, schema: connection.schema)
+        // Detect schema version
+        let version = try await detector.detectSchemaVersion(connection: connection)
+        detectedVersionCache[cacheKey] = version
 
-        // Cache the provider
-        providerCache[connection.id] = provider
+        // Create appropriate adapter based on version
+        let provider = createAdapter(for: version, schema: connection.schema)
+        providerCache[cacheKey] = provider
 
         return provider
     }
 
-    /// Create a schema provider for a specific version
-    func createProvider(for version: PgBossVersion, schema: String) -> any SchemaProvider {
-        Self.createProviderSync(for: version, schema: schema)
+    /// Create adapter for a specific schema version
+    func createAdapter(for version: SchemaVersion, schema: String) -> any SchemaProvider {
+        Self.createAdapterSync(for: version, schema: schema)
     }
 
-    /// Create a schema provider for a specific version (non-isolated)
-    nonisolated static func createProviderSync(for version: PgBossVersion, schema: String = "pgboss") -> any SchemaProvider {
-        switch version {
-        case .legacy:
-            return SchemaLegacyProvider(schema: schema)
-        case .v9:
-            return SchemaV9Provider(schema: schema)
-        case .v10:
-            return SchemaV10Provider(schema: schema)
-        case .v11Plus:
-            return SchemaV11Provider(schema: schema)
+    /// Create adapter for a specific schema version (non-isolated)
+    nonisolated static func createAdapterSync(for version: SchemaVersion, schema: String = "pgboss") -> any SchemaProvider {
+        // Map schema version number to appropriate adapter
+        switch version.adapterGroup {
+        case .camelCase:
+            return Schema20To23Adapter(schema: schema)
+        case .snakeCaseV10:
+            return Schema24To25Adapter(schema: schema)
+        case .snakeCaseV11Plus:
+            return Schema26To27Adapter(schema: schema)
+        case .unknown:
+            // Fallback to latest adapter for forward compatibility
+            return Schema26To27Adapter(schema: schema)
         }
+    }
+
+    /// Get detected schema version for a connection (for display purposes)
+    /// - Parameters:
+    ///   - connectionId: The connection ID
+    ///   - schema: The schema name
+    /// - Returns: The detected SchemaVersion, if available in cache
+    func getDetectedVersion(for connectionId: UUID, schema: String) -> SchemaVersion? {
+        let cacheKey = ProviderCacheKey(connectionId: connectionId, schema: schema)
+        return detectedVersionCache[cacheKey]
+    }
+
+    /// Check if a schema version is supported
+    func isVersionSupported(_ version: SchemaVersion) -> Bool {
+        version.rawValue >= 20 && version.rawValue <= 27
     }
 
     // MARK: - Cache Management
 
-    /// Clear cached provider for a connection
-    func clearCache(for connectionId: UUID) {
-        providerCache.removeValue(forKey: connectionId)
+    /// Clear cached provider for a connection and schema
+    /// - Parameters:
+    ///   - connectionId: The connection ID
+    ///   - schema: The schema name (if nil, clears all schemas for this connection)
+    func clearCache(for connectionId: UUID, schema: String? = nil) {
+        if let schema = schema {
+            let cacheKey = ProviderCacheKey(connectionId: connectionId, schema: schema)
+            providerCache.removeValue(forKey: cacheKey)
+            detectedVersionCache.removeValue(forKey: cacheKey)
+        } else {
+            // Clear all schemas for this connection
+            providerCache = providerCache.filter { $0.key.connectionId != connectionId }
+            detectedVersionCache = detectedVersionCache.filter { $0.key.connectionId != connectionId }
+        }
     }
 
     /// Clear all cached data
     func clearAllCaches() {
         providerCache.removeAll()
+        detectedVersionCache.removeAll()
     }
 }
 
