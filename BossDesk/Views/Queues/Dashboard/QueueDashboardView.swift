@@ -29,7 +29,8 @@ struct QueueDashboardView: View {
             }
             .padding(DesignTokens.Spacing.xxLarge)
         }
-        .task {
+        .task(id: store.selectedQueueId) {
+            guard store.selectedQueueId != nil else { return }
             await store.refreshDashboardStats()
         }
     }
