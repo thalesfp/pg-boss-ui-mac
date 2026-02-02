@@ -51,11 +51,11 @@ struct QueueService {
                             let config: QueueConfig
                             if isV11 {
                                 // v11: retention_seconds, deletion_seconds, expire_seconds, retry_limit, policy
-                                let retentionSeconds = try columns[1].int()
+                                let retentionSeconds = try columns[1].optionalInt()
                                 let deletionSeconds = try columns[2].optionalInt()
-                                let expireSeconds = try columns[3].int()
-                                let retryLimit = try columns[4].int()
-                                let policy = try columns[5].string()
+                                let expireSeconds = try columns[3].optionalInt()
+                                let retryLimit = try columns[4].optionalInt()
+                                let policy = try columns[5].optionalString()
                                 config = QueueConfig(
                                     retentionSeconds: retentionSeconds,
                                     deletionSeconds: deletionSeconds,
@@ -65,12 +65,12 @@ struct QueueService {
                                 )
                             } else {
                                 // v10: retention_minutes, expire_seconds, retry_limit, policy
-                                let retentionMinutes = try columns[1].int()
-                                let expireSeconds = try columns[2].int()
-                                let retryLimit = try columns[3].int()
-                                let policy = try columns[4].string()
+                                let retentionMinutes = try columns[1].optionalInt()
+                                let expireSeconds = try columns[2].optionalInt()
+                                let retryLimit = try columns[3].optionalInt()
+                                let policy = try columns[4].optionalString()
                                 config = QueueConfig(
-                                    retentionSeconds: retentionMinutes * 60,  // Convert to seconds
+                                    retentionSeconds: retentionMinutes.map { $0 * 60 },  // Convert to seconds if present
                                     deletionSeconds: nil,
                                     expireSeconds: expireSeconds,
                                     retryLimit: retryLimit,
