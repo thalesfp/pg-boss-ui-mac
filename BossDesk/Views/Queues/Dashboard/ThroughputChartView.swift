@@ -129,6 +129,7 @@ struct ThroughputChartView: View {
                 .frame(height: 200)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DesignTokens.Spacing.large)
         .background(Color.secondary.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.medium))
